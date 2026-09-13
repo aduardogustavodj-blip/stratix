@@ -10,19 +10,25 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Выбираем свежий Xcode, где доступен Swift 6.2+
-      - name: Select Xcode Version
+      - name: Select Latest Xcode
         run: |
-          XCODE_PATH=$(ls -d /Applications/Xcode_16*.app | sort -V | tail -n 1)
-          echo "Selected Xcode: $XCODE_PATH"
-          sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+          LATEST_XCODE=$(ls -d /Applications/Xcode*.app | sort -V | tail -n 1)
+          echo "Selecting Xcode: $LATEST_XCODE"
+          sudo xcode-select -s "$LATEST_XCODE/Contents/Developer"
+          swift --version
+
+      # Шаг патча: понижаем версию swift-tools с 6.2 до 6.1 во всех пакетах
+      - name: Patch Swift Tools Version
+        run: |
+          find Packages/ -name "Package.swift" -exec sed -i '' 's/swift-tools-version: 6.2/swift-tools-version: 6.1/g' {} +
+          echo "Patched Swift tools version to 6.1"
 
       - name: Build Archive
         run: |
           xcodebuild -workspace Stratix.xcworkspace \
-            -scheme Stratix-Release \
+            -scheme Stratix-Debug \
             -sdk appletvos \
-            -configuration Release \
+            -configuration Debug \
             -archivePath build/Stratix.xcarchive \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
