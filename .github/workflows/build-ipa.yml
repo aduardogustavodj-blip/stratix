@@ -1,7 +1,7 @@
 name: Build tvOS IPA
 
 on:
-  workflow_dispatch: # Позволяет запускать сборку вручную одной кнопкой
+  workflow_dispatch:
 
 jobs:
   build:
@@ -10,8 +10,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Выбираем свежий Xcode, где доступен Swift 6.2+
       - name: Select Xcode Version
-        run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
+        run: |
+          XCODE_PATH=$(ls -d /Applications/Xcode_16*.app | sort -V | tail -n 1)
+          echo "Selected Xcode: $XCODE_PATH"
+          sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
 
       - name: Build Archive
         run: |
@@ -21,6 +25,7 @@ jobs:
             -configuration Release \
             -archivePath build/Stratix.xcarchive \
             CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
             build archive
 
       - name: Package IPA
